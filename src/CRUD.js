@@ -5,7 +5,9 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import { Col, Container, Row } from "react-bootstrap";
 import axios from "axios";
-import Form from 'react-bootstrap/Form';
+import Form from "react-bootstrap/Form";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const CRUD = () => {
   const [show, setShow] = useState(false);
@@ -46,7 +48,6 @@ const CRUD = () => {
 
   useEffect(() => {
     getData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getData = () => {
@@ -70,6 +71,37 @@ const CRUD = () => {
     }
   };
 
+  const handleSave = () => {
+    const url = "https://localhost:44322/api/Character";
+    const data = {
+      name: name,
+      hitPoints: hitPoints,
+      strength: strenght,
+      defense: defense,
+      intelligence: intelligence,
+      class: classe,
+    };
+
+    axios.post(url, data).then((result) => {
+      if (result.data.success == true) {
+        getData();
+        clear();
+        toast.success(result.data.message);
+      } else {
+        toast.error(result.data.message);
+      }
+    });
+  };
+
+  const clear = () => {
+    setName("");
+    setHitPoints("");
+    setStrenght("");
+    setDefense("");
+    setIntelligence("");
+    setClasse("");
+  };
+
   const [name, setName] = useState("");
   const [hitPoints, setHitPoints] = useState("");
   const [strenght, setStrenght] = useState("");
@@ -88,6 +120,7 @@ const CRUD = () => {
 
   return (
     <Fragment>
+      <ToastContainer />
       <Container className="m-2">
         <Row>
           <Col>
@@ -147,7 +180,9 @@ const CRUD = () => {
             </Form.Select>
           </Col>
           <Col>
-            <button className="btn btn-primary">Submit</button>
+            <button className="btn btn-primary" onClick={() => handleSave()}>
+              Submit
+            </button>
           </Col>
         </Row>
       </Container>
