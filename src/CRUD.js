@@ -14,42 +14,11 @@ const CRUD = () => {
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
-
-  const empdata = [
-    {
-      id: 1,
-      name: "Manoj",
-      hitPoints: 29,
-      strength: 1,
-      defense: 1,
-      intelligence: 10,
-      class: 1,
-    },
-    {
-      id: 2,
-      name: "Robson",
-      hitPoints: 29,
-      strength: 1,
-      defense: 1,
-      intelligence: 10,
-      class: 1,
-    },
-    {
-      id: 3,
-      name: "Eduarda",
-      hitPoints: 29,
-      strength: 1,
-      defense: 1,
-      intelligence: 10,
-      class: 1,
-    },
-  ];
   const [data, setData] = useState([]);
 
   useEffect(() => {
     getData();
   }, []);
-
   const getData = () => {
     axios
       .get("https://localhost:44322/api/Character/GetAll")
@@ -60,17 +29,23 @@ const CRUD = () => {
         console.log(error);
       });
   };
-
   const handleEdit = (id) => {
-    //alert(id);
     handleShow();
+    axios
+      .get(`https://localhost:44322/api/Character/${id}`)
+      .then((result) => {
+        setEditId(result.data.data.id)
+        setEditName(result.data.data.name);
+        setEditHitPoints(result.data.data.hitPoints);
+        setEditStrenght(result.data.data.strength);
+        setEditDefense(result.data.data.defense);
+        setEditIntelligence(result.data.data.intelligence);
+        setEditClasse(result.data.data.class);
+      })
+      .catch((error) => {
+        toast.error(error);
+      });
   };
-  const handleDelete = (id) => {
-    if (window.confirm("Do you really want to delete this item?")) {
-      alert(id);
-    }
-  };
-
   const handleSave = () => {
     const url = "https://localhost:44322/api/Character";
     const data = {
@@ -82,17 +57,66 @@ const CRUD = () => {
       class: classe,
     };
 
-    axios.post(url, data).then((result) => {
-      if (result.data.success == true) {
-        getData();
-        clear();
-        toast.success(result.data.message);
-      } else {
-        toast.error(result.data.message);
-      }
-    });
+    axios
+      .post(url, data)
+      .then((result) => {
+        if (result.data.success == true) {
+          getData();
+          clear();
+          toast.success(result.data.message);
+        } else {
+          toast.error(result.data.message);
+        }
+      })
+      .catch((error) => {
+        toast.error(error);
+      });
   };
+  const handleDelete = (id) => {
+    if (window.confirm("Are you share to delete this Character?") == true) {
+      axios
+        .delete(`https://localhost:44322/api/Character/${id}`)
+        .then((result) => {
+          if (result.data.success == true) {
+            getData();
+            clear();
+            toast.success(result.data.message);
+          } else {
+            toast.error(result.data.message);
+          }
+        })
+        .catch((error) => {
+          toast.error(error);
+        });
+    }
+  };
+  const handleUpdate = () => {
+    const url = "https://localhost:44322/api/Character";
+    const data = {
+      id: editId,
+      name: editName,
+      hitPoints: editHitPoints,
+      strength: editStrenght,
+      defense: editDefense,
+      intelligence: editIntelligence,
+      class: editClasse,
+    };
 
+    axios
+      .put(url, data)
+      .then((result) => {
+        if (result.data.success == true) {
+          getData();
+          handleClose();
+          toast.success(result.data.message);
+        } else {
+          toast.error(result.data.message);
+        }
+      })
+      .catch((error) => {
+        toast.error(error);
+      });
+  };
   const clear = () => {
     setName("");
     setHitPoints("");
@@ -101,13 +125,14 @@ const CRUD = () => {
     setIntelligence("");
     setClasse("");
   };
-
   const [name, setName] = useState("");
   const [hitPoints, setHitPoints] = useState("");
   const [strenght, setStrenght] = useState("");
   const [defense, setDefense] = useState("");
   const [intelligence, setIntelligence] = useState("");
   const [classe, setClasse] = useState("");
+
+  const [character, setCharacter] = useState();
 
   const [editId, setEditId] = useState("");
   const [editName, setEditName] = useState("");
@@ -116,8 +141,6 @@ const CRUD = () => {
   const [editDefense, setEditDefense] = useState("");
   const [editIntelligence, setEditIntelligence] = useState("");
   const [editClasse, setEditClasse] = useState("");
-  const handleUpdate = () => {};
-
   return (
     <Fragment>
       <ToastContainer />
@@ -239,7 +262,7 @@ const CRUD = () => {
         </Modal.Header>
         <Modal.Body>
           <Container className="m-2">
-            <Row>
+            <Row className="mb-2">
               <Col>
                 <input
                   type="text"
@@ -258,6 +281,8 @@ const CRUD = () => {
                   onChange={(e) => setEditHitPoints(e.target.value)}
                 ></input>
               </Col>
+            </Row>
+            <Row className="mb-2">
               <Col>
                 <input
                   type="text"
@@ -276,6 +301,8 @@ const CRUD = () => {
                   onChange={(e) => setEditDefense(e.target.value)}
                 ></input>
               </Col>
+            </Row>
+            <Row className="mb-2">
               <Col>
                 <input
                   type="text"
@@ -291,22 +318,19 @@ const CRUD = () => {
                   onChange={(e) => setEditClasse(e.target.value)}
                 >
                   <option>Open this select menu</option>
-                  <option value="1">Knight</option>
-                  <option value="2">Mage</option>
-                  <option value="3">Cleric</option>
+                  <option value="Knight">Knight</option>
+                  <option value="Mage">Mage</option>
+                  <option value="Cleric">Cleric</option>
                 </Form.Select>
-              </Col>
-              <Col>
-                <button className="btn btn-primary">Submit</button>
               </Col>
             </Row>
           </Container>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleUpdate}>
+          <Button variant="secondary" onClick={handleClose}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleClose}>
+          <Button variant="primary" onClick={handleUpdate}>
             Save Changes
           </Button>
         </Modal.Footer>
